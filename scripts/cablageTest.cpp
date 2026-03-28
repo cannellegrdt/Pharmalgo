@@ -5,7 +5,7 @@
 ** cablageTest.cpp
 */
 
-#include "../GivenSimu/sim.hpp"
+#include "../simulator/sim.hpp"
 #include <unistd.h>
 
 extern const uint8_t OUTPUTS[];
