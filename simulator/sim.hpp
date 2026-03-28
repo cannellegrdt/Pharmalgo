@@ -20,6 +20,10 @@
 // Initializes the simulator
 void sim_init();
 
-// Allows you to set the value of a pin
+// Allows you to set the value of a pin (both faces simultaneously)
 void sim(uint8_t pin, uint8_t value);
+
+// Allows you to set the value of a pin for a single face
+// face: 0 = recto (front), 1 = verso (back)
+void sim_face(uint8_t face, uint8_t pin, uint8_t value);
 

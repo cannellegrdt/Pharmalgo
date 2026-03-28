@@ -24,7 +24,8 @@
         <span class="toggle-track"></span>
         <span>Auto-send</span>
       </label>
-      <button class="btn btn-primary" id="sendBtn">Send Frame</button>
+      <button class="btn" id="sendBtn">Send Face</button>
+      <button class="btn btn-primary" id="sendBothBtn">Send Both</button>
     </div>
   </header>
 
@@ -67,7 +68,7 @@
 
       <div class="tb-group">
         <span class="tb-label">Actions</span>
-        <button class="tool-btn" id="clearAllBtn" title="Clear All  [Del]">
+        <button class="tool-btn" id="clearAllBtn" title="Clear Face  [Del]">
           <svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
           Clear
         </button>
@@ -76,11 +77,20 @@
     </nav>
 
     <div id="canvas-wrap">
+      <div id="face-tabs">
+        <button class="face-tab active" data-face="recto">RECTO</button>
+        <button class="face-tab" data-face="verso">VERSO</button>
+      </div>
       <canvas id="canvas"></canvas>
       <div id="cursor-hint">Click and drag to draw</div>
     </div>
 
     <aside id="sidebar">
+
+      <section class="sb-section">
+        <h3>Face active</h3>
+        <div id="face-indicator" class="face-indicator recto">RECTO</div>
+      </section>
 
       <section class="sb-section">
         <h3>Brightness</h3>
@@ -107,8 +117,10 @@
           <div><kbd>F</kbd> Fill</div>
           <div><kbd>I</kbd> Eyedropper</div>
           <div><kbd>0</kbd>–<kbd>7</kbd> Brightness</div>
-          <div><kbd>S</kbd> Send</div>
-          <div><kbd>Del</kbd> Clear all</div>
+          <div><kbd>S</kbd> Send face</div>
+          <div><kbd>B</kbd> Send both</div>
+          <div><kbd>Tab</kbd> Switch face</div>
+          <div><kbd>Del</kbd> Clear face</div>
         </div>
       </section>
 

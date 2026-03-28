@@ -260,6 +260,62 @@ h1 {
   transform: scale(1.1);
 }
 
+#face-tabs {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.face-tab {
+  padding: 5px 22px;
+  border: 1px solid var(--border);
+  border-radius: 4px 4px 0 0;
+  background: var(--bg1);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  transition: all .15s;
+}
+.face-tab:hover {
+  background: var(--bg2);
+  color: var(--text);
+}
+.face-tab.active[data-face="recto"] {
+  background: var(--bg3);
+  color: var(--green-max);
+  border-color: var(--green-max);
+  border-bottom-color: var(--bg0);
+  text-shadow: 0 0 8px var(--green-max);
+}
+.face-tab.active[data-face="verso"] {
+  background: var(--bg3);
+  color: var(--accent);
+  border-color: var(--accent);
+  border-bottom-color: var(--bg0);
+  text-shadow: 0 0 8px var(--accent);
+}
+
+.face-indicator {
+  padding: 4px 16px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  border: 1px solid var(--border);
+}
+.face-indicator.recto {
+  color: var(--green-max);
+  border-color: var(--green-max);
+  text-shadow: 0 0 8px var(--green-max);
+}
+.face-indicator.verso {
+  color: var(--accent);
+  border-color: var(--accent);
+  text-shadow: 0 0 8px var(--accent);
+}
+
 #canvas-wrap {
   flex: 1;
   display: flex;

@@ -20,10 +20,15 @@ const PANEL_GRID = {
 };
 const PANEL_NAMES = ['top', 'left', 'center', 'right', 'bottom'];
 
-const pixels = {};
-for (const name of PANEL_NAMES) {
-  pixels[name] = Array.from({ length: 8 }, () => new Uint8Array(8));
+const facePixels = { recto: {}, verso: {} };
+for (const face of ['recto', 'verso']) {
+  for (const name of PANEL_NAMES) {
+    facePixels[face][name] = Array.from({ length: 8 }, () => new Uint8Array(8));
+  }
 }
+
+let activeFace = 'recto';
+let pixels = facePixels[activeFace];
 
 let activeTool = 'pencil';
 let activeBrightness = 7;
@@ -241,6 +246,21 @@ function setBrightness(b) {
   );
 }
 
+function switchFace(face) {
+  activeFace = face;
+  pixels = facePixels[face];
+
+  document.querySelectorAll('.face-tab').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.face === face)
+  );
+
+  const indicator = document.getElementById('face-indicator');
+  indicator.textContent = face.toUpperCase();
+  indicator.className = 'face-indicator ' + face;
+
+  render();
+}
+
 function updateCursorInfo(hit) {
   if (hit) {
     document.getElementById('i-panel').textContent = hit.panel;
@@ -259,12 +279,12 @@ function setStatus(state) {
   statusTxt.textContent = { sending: 'Sending…', ok: 'Sent', error: 'Simulator not running', '': 'Ready' }[state] ?? state;
 }
 
-function getPayload() {
+function getPanelsPayload(face) {
   const panels = {};
   for (const name of PANEL_NAMES) {
-    panels[name] = Array.from(pixels[name], row => Array.from(row));
+    panels[name] = Array.from(facePixels[face][name], row => Array.from(row));
   }
-  return { panels };
+  return panels;
 }
 
 async function doSend() {
@@ -274,7 +294,26 @@ async function doSend() {
     const res = await fetch('/api/frame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(getPayload()),
+      body: JSON.stringify({ face: activeFace, panels: getPanelsPayload(activeFace) }),
+    });
+    setStatus(res.ok ? 'ok' : 'error');
+  } catch {
+    setStatus('error');
+  }
+}
+
+async function doSendBoth() {
+  setStatus('sending');
+  try {
+    const res = await fetch('/api/frame/both', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        faces: {
+          recto: getPanelsPayload('recto'),
+          verso: getPanelsPayload('verso'),
+        },
+      }),
     });
     setStatus(res.ok ? 'ok' : 'error');
   } catch {
@@ -330,6 +369,10 @@ document.querySelectorAll('.tool-btn[data-tool]').forEach(btn =>
   btn.addEventListener('click', () => setTool(btn.dataset.tool))
 );
 
+document.querySelectorAll('.face-tab').forEach(btn =>
+  btn.addEventListener('click', () => switchFace(btn.dataset.face))
+);
+
 document.getElementById('bright-slider').addEventListener('input', e =>
   setBrightness(+e.target.value)
 );
@@ -339,6 +382,7 @@ document.getElementById('autoSend').addEventListener('change', e => {
 });
 
 document.getElementById('sendBtn').addEventListener('click', doSend);
+document.getElementById('sendBothBtn').addEventListener('click', doSendBoth);
 
 document.getElementById('clearAllBtn').addEventListener('click', () => {
   for (const name of PANEL_NAMES) pixels[name].forEach(row => row.fill(0));
@@ -354,6 +398,11 @@ document.addEventListener('keydown', e => {
     case 'f': case 'F': setTool('fill'); break;
     case 'i': case 'I': setTool('eyedropper'); break;
     case 's': case 'S': doSend(); break;
+    case 'b': case 'B': doSendBoth(); break;
+    case 'Tab':
+      e.preventDefault();
+      switchFace(activeFace === 'recto' ? 'verso' : 'recto');
+      break;
     case 'Delete': case 'Backspace':
       for (const name of PANEL_NAMES) pixels[name].forEach(row => row.fill(0));
       render();
@@ -379,4 +428,5 @@ document.addEventListener('keydown', e => {
 
 setBrightness(7);
 setTool('pencil');
+switchFace('recto');
 render();
