@@ -14,8 +14,7 @@ CXXFLAGS  = -Wall -Wextra -std=c++17
 
 SRC    = main.cpp \
          ../scripts/cablageTest.cpp
-HW_SRC = main.cpp \
-         ../scripts/cablageTest.cpp \
+HW_SRC = main_hw.cpp \
          hardware.cpp
 
 LIB = libsim.a
