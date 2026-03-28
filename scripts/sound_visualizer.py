@@ -44,10 +44,10 @@ PANEL_OFFSETS = {
 }
 
 PANEL_FREQ = {
-    "top": (4000, 20000),  # Treble
-    "right": (800, 4000),   # High-mid
-    "bottom": (150, 800),    # Mid
-    "left": (20, 150),    # Bass
+    "top": (4000, 20000), # Treble
+    "right": (800, 4000), # High-mid
+    "bottom": (150, 800), # Mid
+    "left": (20, 150), # Bass
     # center intentionally absent - stays dark
 }
 
@@ -142,7 +142,7 @@ def audio_callback(indata, frames, time_info, status):
     panels = {}
     for panel_name, sub_bands in _sub_bands.items():
         direction = PANEL_DIR[panel_name]
-        levels = []
+        levels = [] # B
 
         for bar_idx, (fmin, fmax) in enumerate(sub_bands):
             key = f"{panel_name}:{bar_idx}"

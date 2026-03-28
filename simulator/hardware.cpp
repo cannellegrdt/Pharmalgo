@@ -10,16 +10,16 @@
 #include <cstdio>
 
 // Recto (front face)
-static constexpr int R_OE    = 24;
+static constexpr int R_OE = 24;
 static constexpr int R_LATCH = 25;
-static constexpr int R_CLK   = 8;
-static constexpr int R_DATA  = 7;
+static constexpr int R_CLK = 8;
+static constexpr int R_DATA = 7;
 
 // Verso (back face)
-static constexpr int V_OE    = 14;
+static constexpr int V_OE = 14;
 static constexpr int V_LATCH = 15;
-static constexpr int V_CLK   = 18;
-static constexpr int V_DATA  = 23;
+static constexpr int V_CLK = 18;
+static constexpr int V_DATA = 23;
 
 static constexpr int GPIO_CHIP_RPI5 = 4;
 static constexpr int GPIO_CHIP_RPI4 = 0;

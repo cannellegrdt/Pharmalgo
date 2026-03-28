@@ -12,12 +12,12 @@ HW_TARGET = challenge_hw
 CXX       = g++
 CXXFLAGS  = -Wall -Wextra -std=c++17
 
-SRC    = main.cpp \
-         ../scripts/cablageTest.cpp
-HW_SRC = main_hw.cpp \
-         hardware.cpp
+SRC    = simulator/main.cpp \
+         scripts/cablageTest.cpp
+HW_SRC = simulator/main_hw.cpp \
+         simulator/hardware.cpp
 
-LIB = libsim.a
+LIB = lib/libsim.a
 
 # ── Simulator build (default) ─────────────────────────────────────────────────
 all: $(TARGET)
