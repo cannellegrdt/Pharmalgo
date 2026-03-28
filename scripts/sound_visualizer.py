@@ -61,46 +61,43 @@ PEAK_DECAY = 0.993
 
 def make_panel(level: float, direction: str) -> list:
     """
-    Build an 8x8 panel with a bar proportional to level (0.0-1.0).
-    The bar grows outward from the cross center. Brightness fades toward the tip.
+    Build an 8x8 panel with 4 discrete blocks growing outward from the cross center.
+    Blocks are separated by 1-pixel gaps. Each block is full-width x 1 pixel (or
+    full-height x 1 pixel for horizontal bars).
+
+    Block positions (root = nearest to cross center):
+      up/down   : rows 7, 5, 3, 1  (gaps at 6, 4, 2, 0)
+      left/right: cols 7, 5, 3, 1  (gaps at 6, 4, 2, 0)
     """
+    N = 4
     panel = [[0] * 8 for _ in range(8)]
-    lit = int(round(level * 8))
+    lit = int(round(level * N))
     if lit == 0:
         return panel
 
-    for i in range(8):
+    block_positions = [7 - seg * 2 for seg in range(N)]
+
+    for seg in range(lit):
+        pos = block_positions[seg]
+        brightness = max(3, 7 - seg)
+
         if direction == "up":
-            dist_from_root = 7 - i
-            is_lit = dist_from_root < lit
-            brightness = max(2, 7 - dist_from_root)
-            if is_lit:
-                for col in range(8):
-                    panel[i][col] = brightness
+            for col in range(8):
+                panel[pos][col] = brightness
 
         elif direction == "down":
-            dist_from_root = i
-            is_lit = dist_from_root < lit
-            brightness = max(2, 7 - dist_from_root)
-            if is_lit:
-                for col in range(8):
-                    panel[i][col] = brightness
+            row = 7 - pos
+            for col in range(8):
+                panel[row][col] = brightness
 
         elif direction == "left":
-            dist_from_root = 7 - i
-            is_lit = dist_from_root < lit
-            brightness = max(2, 7 - dist_from_root)
-            if is_lit:
-                for row in range(8):
-                    panel[row][i] = brightness
+            for row in range(8):
+                panel[row][pos] = brightness
 
         elif direction == "right":
-            dist_from_root = i
-            is_lit = dist_from_root < lit
-            brightness = max(2, 7 - dist_from_root)
-            if is_lit:
-                for row in range(8):
-                    panel[row][i] = brightness
+            col = 7 - pos
+            for row in range(8):
+                panel[row][col] = brightness
 
     return panel
 
