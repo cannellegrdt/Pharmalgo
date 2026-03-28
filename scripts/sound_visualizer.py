@@ -9,17 +9,20 @@
 """
 Real-time sound visualizer for the pharmacy cross LED display.
 
-Each panel represents a frequency band, with bars growing outward from
-the center of the cross:
+Each panel covers a frequency range, split into 8 sub-bands.
+Each sub-band drives one independent bar growing outward from center:
 
-        [TOP]  treble  6k-20kHz
-  [LEFT] bass  [CENTER] mid  [RIGHT] high-mid
-        [BOTTOM] sub-bass 20-80Hz
+  TOP    (4k-20kHz) : 8 vertical bars, one per column, growing upward
+  RIGHT  (800-4kHz) : 8 horizontal bars, one per row, growing rightward
+  BOTTOM (150-800Hz): 8 vertical bars, one per column, growing downward
+  LEFT   (20-150Hz) : 8 horizontal bars, one per row, growing leftward
+  CENTER            : stays dark
 
 Requirements:
     pip install sounddevice numpy
 """
 
+import math
 import socket
 import json
 import sys
@@ -40,7 +43,7 @@ PANEL_OFFSETS = {
     "bottom": (16, 8),
 }
 
-FREQ_BANDS = {
+PANEL_FREQ = {
     "top": (4000, 20000),  # Treble
     "right": (800, 4000),   # High-mid
     "bottom": (150, 800),    # Mid
@@ -48,56 +51,56 @@ FREQ_BANDS = {
     # center intentionally absent - stays dark
 }
 
-BAR_DIRECTION = {
-    "top":    "up",
+PANEL_DIR = {
+    "top": "up",
     "bottom": "down",
-    "left":   "left",
-    "right":  "right",
+    "left": "left",
+    "right": "right",
 }
 
 SMOOTHING = 0.65
 PEAK_DECAY = 0.993
+N_BARS = 8
+
+def log_split(fmin: float, fmax: float, n: int) -> list:
+    """Split [fmin, fmax] into n sub-bands with logarithmic spacing."""
+    log_min = math.log(max(fmin, 1))
+    log_max = math.log(fmax)
+    edges = [math.exp(log_min + i * (log_max - log_min) / n) for i in range(n + 1)]
+    return [(edges[i], edges[i + 1]) for i in range(n)]
 
 
-def make_panel(level: float, direction: str) -> list:
+def make_panel(levels: list, direction: str) -> list:
     """
-    Build an 8x8 panel with 4 discrete blocks growing outward from the cross center.
-    Blocks are separated by 1-pixel gaps. Each block is full-width x 1 pixel (or
-    full-height x 1 pixel for horizontal bars).
+    Build an 8x8 panel with N_BARS independent bars.
+    Each bar grows outward from the cross center.
 
-    Block positions (root = nearest to cross center):
-      up/down   : rows 7, 5, 3, 1  (gaps at 6, 4, 2, 0)
-      left/right: cols 7, 5, 3, 1  (gaps at 6, 4, 2, 0)
+    For vertical panels (up/down): bar_idx = column, bar grows in row direction.
+    For horizontal panels (left/right): bar_idx = row, bar grows in col direction.
+
+    levels: list of N_BARS floats in [0.0, 1.0]
     """
-    N = 4
     panel = [[0] * 8 for _ in range(8)]
-    lit = int(round(level * N))
-    if lit == 0:
-        return panel
 
-    block_positions = [7 - seg * 2 for seg in range(N)]
+    for bar_idx, level in enumerate(levels):
+        lit = int(round(level * N_BARS))
+        if lit == 0:
+            continue
 
-    for seg in range(lit):
-        pos = block_positions[seg]
-        brightness = max(3, 7 - seg)
+        for step in range(lit):
+            brightness = max(2, 7 - step)
 
-        if direction == "up":
-            for col in range(8):
-                panel[pos][col] = brightness
+            if direction == "up":
+                panel[7 - step][bar_idx] = brightness
 
-        elif direction == "down":
-            row = 7 - pos
-            for col in range(8):
-                panel[row][col] = brightness
+            elif direction == "down":
+                panel[step][bar_idx] = brightness
 
-        elif direction == "left":
-            for row in range(8):
-                panel[row][pos] = brightness
+            elif direction == "left":
+                panel[bar_idx][7 - step] = brightness
 
-        elif direction == "right":
-            col = 7 - pos
-            for row in range(8):
-                panel[row][col] = brightness
+            elif direction == "right":
+                panel[bar_idx][step] = brightness
 
     return panel
 
@@ -122,28 +125,36 @@ def panels_to_frame(panels: dict) -> list:
     return frame
 
 
-_smoothed = {name: 0.0 for name in PANEL_OFFSETS}
-_peak = {name: 1e-6 for name in PANEL_OFFSETS}
+_smoothed: dict = {}
+_peak: dict = {}
 _sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+_sub_bands: dict = {name: log_split(fmin, fmax, N_BARS)
+                    for name, (fmin, fmax) in PANEL_FREQ.items()}
 
 
 def audio_callback(indata, frames, time_info, status):
     audio = indata[:, 0]
-
     windowed = audio * np.hanning(len(audio))
     fft = np.fft.rfft(windowed)
     magnitudes = np.abs(fft) / CHUNK
 
     panels = {}
-    for name, (fmin, fmax) in FREQ_BANDS.items():
-        raw = band_energy(magnitudes, fmin, fmax)
+    for panel_name, sub_bands in _sub_bands.items():
+        direction = PANEL_DIR[panel_name]
+        levels = []
 
-        _peak[name] = max(_peak[name] * PEAK_DECAY, raw, 1e-6)
-        normalized  = min(raw / _peak[name], 1.0)
+        for bar_idx, (fmin, fmax) in enumerate(sub_bands):
+            key = f"{panel_name}:{bar_idx}"
+            raw = band_energy(magnitudes, fmin, fmax)
 
-        _smoothed[name] = SMOOTHING * _smoothed[name] + (1.0 - SMOOTHING) * normalized
+            _peak[key] = max(_peak.get(key, 1e-6) * PEAK_DECAY, raw, 1e-6)
+            normalized = min(raw / _peak[key], 1.0)
+            _smoothed[key] = SMOOTHING * _smoothed.get(key, 0.0) + (1.0 - SMOOTHING) * normalized
 
-        panels[name] = make_panel(_smoothed[name], BAR_DIRECTION[name])
+            levels.append(_smoothed[key])
+
+        panels[panel_name] = make_panel(levels, direction)
 
     frame   = panels_to_frame(panels)
     payload = json.dumps(frame).encode("utf-8")
@@ -155,9 +166,9 @@ def main():
     print("║   Sound Visualizer — Pharmacy Cross  ║")
     print("╚══════════════════════════════════════╝")
     print()
-    print("Frequency bands:")
-    for name, (fmin, fmax) in FREQ_BANDS.items():
-        print(f"  {name:8s} → {fmin:5d} - {fmax:6d} Hz  [{BAR_DIRECTION[name]}]")
+    print("Panel → frequency range → 8 independent bars:")
+    for name, (fmin, fmax) in PANEL_FREQ.items():
+        print(f"  {name:8s} ({PANEL_DIR[name]:5s}) → {fmin:5d} – {fmax:6d} Hz")
     print()
     print("Ctrl+C to stop.")
     print()
