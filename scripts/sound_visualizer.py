@@ -118,10 +118,10 @@ def band_energy(magnitudes: np.ndarray, freq_min: float, freq_max: float) -> flo
 def panels_to_frame(panels: dict) -> list:
     frame = [[0] * 24 for _ in range(24)]
     for name, (row_off, col_off) in PANEL_OFFSETS.items():
-        p = panels.get(name, [])
+        p = panels.get(name)
         for row in range(8):
             for col in range(8):
-                frame[row_off + row][col_off + col] = p[row][col]
+                frame[row_off + row][col_off + col] = p[row][col] if p else 0
     return frame
 
 
