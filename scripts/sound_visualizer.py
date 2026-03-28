@@ -41,19 +41,18 @@ PANEL_OFFSETS = {
 }
 
 FREQ_BANDS = {
-    "top": (6000, 20000), # Treble
-    "right": (2000, 6000), # High-mid
-    "center": (300, 2000), # Mid
-    "left": (80, 300), # Bass
-    "bottom": (20, 80), # Sub-bass
+    "top": (4000, 20000),  # Treble
+    "right": (800, 4000),   # High-mid
+    "bottom": (150, 800),    # Mid
+    "left": (20, 150),    # Bass
+    # center intentionally absent - stays dark
 }
 
 BAR_DIRECTION = {
-    "top": "up",
+    "top":    "up",
     "bottom": "down",
-    "left": "left",
-    "right": "right",
-    "center": "up",
+    "left":   "left",
+    "right":  "right",
 }
 
 SMOOTHING = 0.65
@@ -152,8 +151,6 @@ def audio_callback(indata, frames, time_info, status):
     frame   = panels_to_frame(panels)
     payload = json.dumps(frame).encode("utf-8")
     _sock.sendto(payload, (UDP_HOST, UDP_PORT))
-    levels = {n: f"{_smoothed[n]:.2f}" for n in _smoothed}
-    print(f"\r  center={levels['center']} left={levels['left']} top={levels['top']}    ", end="")
 
 
 def main():
