@@ -53,7 +53,7 @@ void sim(uint8_t pin, uint8_t value) {
 
     switch (pin) {
         case SORTIE_3:
-            w(R_OE, V_OE, level);
+            w(R_OE, V_OE, level ? 0 : 1);
             break;
 
         case SORTIE_4:
