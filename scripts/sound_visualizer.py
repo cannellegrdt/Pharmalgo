@@ -152,6 +152,8 @@ def audio_callback(indata, frames, time_info, status):
     frame   = panels_to_frame(panels)
     payload = json.dumps(frame).encode("utf-8")
     _sock.sendto(payload, (UDP_HOST, UDP_PORT))
+    levels = {n: f"{_smoothed[n]:.2f}" for n in _smoothed}
+    print(f"\r  center={levels['center']} left={levels['left']} top={levels['top']}    ", end="")
 
 
 def main():
