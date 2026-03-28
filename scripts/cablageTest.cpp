@@ -11,8 +11,8 @@
 extern const uint8_t OUTPUTS[];
 extern const int N_OUTPUTS;
 
-#define NB_LEDS = 8
-#define TOTAL_NB_LEDS = 320
+#define NB_LEDS 8
+#define TOTAL_NB_LEDS 320
 
 // Offset of each panel in the 320-element pixel vector
 // Order confirmed by reverse engineering applyMatrix():

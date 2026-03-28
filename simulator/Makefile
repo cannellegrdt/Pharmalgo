@@ -5,6 +5,8 @@
 ## Makefile
 ##
 
+.PHONY: all hardware clean fclean re
+
 TARGET    = challenge
 HW_TARGET = challenge_hw
 CXX       = g++
